@@ -1,0 +1,11 @@
+apikey: Value
+database: 
+  host: mongodb
+  port: port
+  username: user
+  password: password
+zookeeper: zk:port
+tickers: 
+  - SPY
+  - AAPL
+  - IWM

@@ -1,6 +1,7 @@
 # PolygonTools
 Tools to stream and access financial market data from Polygon.io to Kafka
 
+## Streamer
 ### Run
 ```
 $ cd Streamer/  
@@ -9,7 +10,7 @@ $ go build
 $ ./Streamer [optional path to config]  
 ```
 
-### Configuration
+## Configuration
 default: conf/polygon.yaml
 
 ```

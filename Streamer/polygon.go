@@ -1,3 +1,4 @@
+package main
 
 type Trade struct {
   Symbol	string		`json:"sym"`

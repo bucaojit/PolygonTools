@@ -5,6 +5,10 @@ database:
   username: user
   password: password
 zookeeper: zk:port
+kafka:
+  topic: polygon
+  host: hostname
+  port: port
 tickers: 
   - SPY
   - AAPL

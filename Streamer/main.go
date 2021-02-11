@@ -1,77 +1,101 @@
 package main
 
 import (
-    //"bufio"
-    "fmt"
-    //"io"
-    
-    
-    "log"
-    "os"
-    "github.com/sirupsen/logrus"
-    "github.com/gorilla/websocket"
+	//"bufio"
+	"fmt"
+	"time"
+
+	//"io"
+
+	"encoding/json"
+	"log"
+	"os"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
-
-// func setupWebsocket() 
-func tickerToChannels(tickers []string) string {
-    channels := ""
-    for _, ticker := range tickers {
-        channels += "T." + ticker + ","
-        channels += "Q." + ticker + ","
-    }
-    channels = channels[:len(channels) - 1]
-    return channels
-}
-
 func main() {
-    configFile := "../conf/polygon.yaml"
-    // CHANNELS := "T.SPY,Q.SPY"
+	configFile := "../conf/polygon.yaml"
+	webSocketEndpoint := "wss://socket.polygon.io/stocks"
+	// CHANNELS := "T.SPY,Q.SPY"
 
-    fmt.Println("Starting streamer...")
+	fmt.Println("Starting streamer...")
 
-    args := os.Args[1:]
-    if len(args) == 1 {
-        configFile = os.Args[1]
-    }
-    conf, err := readConf(configFile)
-    if err != nil {
-        log.Fatal(err)
-    }
+	args := os.Args[1:]
+	if len(args) == 1 {
+		configFile = os.Args[1]
+	}
+	conf, err := readConf(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    CHANNELS := tickerToChannels(conf.Tickers)
-    fmt.Println(CHANNELS)
+	channels := tickerToChannels(conf.Tickers)
+	kafkaTopic := kafkaTopic(conf)
+	kafkaHosts := kafkaHosts(conf)
 
-    c, _, err := websocket.DefaultDialer.Dial("wss://socket.polygon.io/stocks", nil)
+	fmt.Println(channels)
+	fmt.Println(kafkaTopic)
+	fmt.Println(kafkaHosts)
+
+	c, _, err := websocket.DefaultDialer.Dial(webSocketEndpoint, nil)
 	if err != nil {
 		panic(err)
-    }
-    defer c.Close()
+	}
+	defer c.Close()
+
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": kafkaHosts})
+	defer p.Close()
+
+	if err != nil {
+		logrus.Fatal("Failed to create producer: %s\n", err)
+	}
+
+	fmt.Printf("Created Producer %v\n", p)
 
 	_ = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("{\"action\":\"auth\",\"params\":\"%s\"}", conf.Apikey)))
-	_ = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("{\"action\":\"subscribe\",\"params\":\"%s\"}", CHANNELS)))
+	_ = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("{\"action\":\"subscribe\",\"params\":\"%s\"}", channels)))
 
-	// Buffered channel to account for bursts or spikes in data:
 	chanMessages := make(chan interface{}, 10000)
+	//go processMessage(chanMessages, p, kafkaTopic)
 
-	// Read messages off the buffered queue:
-	go func() {
-		for msgBytes := range chanMessages {
-			logrus.Info("Message Bytes: ", msgBytes)
-		}
-	}()
-
-	// As little logic as possible in the reader loop:
 	for {
 		var msg interface{}
 		err := c.ReadJSON(&msg)
-		// Ideally use c.ReadMessage instead of ReadJSON so you can parse the JSON data in a
-		// separate go routine. Any processing done in this loop increases the chances of disconnects
-		// due to not consuming the data fast enough.
+		// logrus.Info(msg)
+
 		if err != nil {
 			panic(err)
 		}
 		chanMessages <- msg
 	}
+}
 
+func processMessage(chanMessages <-chan interface{}, producer *kafka.Producer, topic string) {
+
+	deliveryChan := make(chan kafka.Event)
+	e := <-deliveryChan
+	for msgBytes := range chanMessages {
+		logrus.Info("Message Bytes: ", msgBytes)
+		value, _ := json.Marshal(msgBytes)
+		err := producer.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          value,
+			Key:            []byte{},
+			Timestamp:      time.Time{},
+			TimestampType:  0,
+			Opaque:         nil,
+			Headers:        []kafka.Header{{Key: "myTestHeader", Value: []byte("header values are binary")}},
+		}, deliveryChan)
+		m := e.(*kafka.Message)
+		if m.TopicPartition.Error != nil {
+			//fmt.Printf()
+			logrus.Fatal("Delivery failed: %v\n", m.TopicPartition.Error)
+		}
+		if err != nil {
+			logrus.Fatal("Producer failure: %v\n", err)
+		}
+	}
 }

@@ -30,7 +30,7 @@ type Conf struct {
 }
 
 // func setupWebsocket()
-func tickerToChannels(tickers []string) string {
+func TickerToChannels(tickers []string) string {
 	channels := ""
 	for _, ticker := range tickers {
 		channels += "T." + ticker + ","
@@ -40,7 +40,7 @@ func tickerToChannels(tickers []string) string {
 	return channels
 }
 
-func kafkaHosts(config *Conf) string {
+func KafkaHosts(config *Conf) string {
 	retString := ""
 	for _, entry := range config.Kafka.Hosts {
 		retString += entry + ","
@@ -49,11 +49,11 @@ func kafkaHosts(config *Conf) string {
 	return retString
 }
 
-func kafkaTopic(config *Conf) string {
+func KafkaTopic(config *Conf) string {
 	return config.Kafka.Topic
 }
 
-func readConf(filename string) (*Conf, error) {
+func ReadConf(filename string) (*Conf, error) {
 	dat, err := ioutil.ReadFile(filename)
 	check(err)
 

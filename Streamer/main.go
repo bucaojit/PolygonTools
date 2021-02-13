@@ -1,12 +1,8 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
 	"time"
-
-	//"io"
-
 	"encoding/json"
 	"log"
 	"os"

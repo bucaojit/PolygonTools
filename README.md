@@ -4,10 +4,10 @@ Tools to stream and access financial market data from Polygon.io to Kafka
 ## Streamer
 ### Run
 ```
-$ cd Streamer/  
+$ cd streamer/  
 $ go get -d ./...  
 $ go build  
-$ ./Streamer [optional path to config]  
+$ ./streamer [optional path to config]  
 ```
 
 ## Configuration

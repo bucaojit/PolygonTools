@@ -1,20 +1,17 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
 	"time"
-
-	//"io"
 
 	"encoding/json"
 	"log"
 	"os"
 
+	"github.com/bucaojit/PolygonTools/config"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
-	//"github.com/bucaojit/PolygonTools/Config"
 )
 
 func main() {
@@ -28,14 +25,14 @@ func main() {
 	if len(args) == 1 {
 		configFile = os.Args[1]
 	}
-	conf, err := Config.readConf(configFile)
+	conf, err := config.ReadConf(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	channels := Config.tickerToChannels(conf.Tickers)
-	kafkaTopic := pt.Config.kafkaTopic(conf)
-	kafkaHosts := pt.Config.kafkaHosts(conf)
+	channels := config.TickerToChannels(conf.Tickers)
+	kafkaTopic := config.KafkaTopic(conf)
+	kafkaHosts := config.KafkaHosts(conf)
 
 	fmt.Println(channels)
 	fmt.Println(kafkaTopic)

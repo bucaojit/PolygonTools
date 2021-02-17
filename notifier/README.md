@@ -6,6 +6,7 @@ Uses a yaml configuration file to specify:
 * smtp information  
 * tls cert and key files  
 * port to listen on  
+See `conf/polygon.yaml.example`
 	
 Takes a JSON payload with the format:  
 ```

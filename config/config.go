@@ -27,6 +27,17 @@ type Conf struct {
 	}
 	Zookeeper string
 	Tickers   []string
+	Smtp struct {
+		Server string
+		Port int
+		User string
+		Password string
+	}
+	Tls struct {
+		Certfile string
+		Keyfile string
+	}
+	Notifierport int
 }
 
 // func setupWebsocket()

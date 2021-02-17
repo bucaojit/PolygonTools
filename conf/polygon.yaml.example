@@ -13,3 +13,13 @@ tickers:
   - SPY
   - AAPL
   - IWM
+smtp:
+  server: smtp.server.org
+  user: sender@domain
+  password: password
+  port: 587
+tls:
+  certfile: /path/to/certfile
+  keyfile: /path/to/keyfile
+notifierport: 2000
+

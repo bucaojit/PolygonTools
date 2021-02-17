@@ -57,7 +57,16 @@ func main() {
 	_ = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("{\"action\":\"subscribe\",\"params\":\"%s\"}", channels)))
 
 	chanMessages := make(chan interface{}, 10000)
-	//go processMessage(chanMessages, p, kafkaTopic)
+	go processMessage(chanMessages, p, kafkaTopic)
+
+	// Read messages off the buffered queue:
+	/*
+	go func() {
+		for msgBytes := range chanMessages {
+			logrus.Info("Message Bytes: ", msgBytes)
+		}
+	}()
+	*/
 
 	for {
 		var msg interface{}
@@ -72,9 +81,10 @@ func main() {
 }
 
 func processMessage(chanMessages <-chan interface{}, producer *kafka.Producer, topic string) {
+	logrus.Info("topic: ", topic)
 
 	deliveryChan := make(chan kafka.Event)
-	e := <-deliveryChan
+	logrus.Info("Before processing the messages")
 	for msgBytes := range chanMessages {
 		logrus.Info("Message Bytes: ", msgBytes)
 		value, _ := json.Marshal(msgBytes)
@@ -87,6 +97,7 @@ func processMessage(chanMessages <-chan interface{}, producer *kafka.Producer, t
 			Opaque:         nil,
 			Headers:        []kafka.Header{{Key: "myTestHeader", Value: []byte("header values are binary")}},
 		}, deliveryChan)
+		e := <-deliveryChan
 		m := e.(*kafka.Message)
 		if m.TopicPartition.Error != nil {
 			//fmt.Printf()

@@ -19,3 +19,5 @@ polygon.yaml
 Streamer
 streamer
 notifier
+
+__pycache__

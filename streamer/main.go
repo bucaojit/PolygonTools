@@ -48,7 +48,7 @@ func main() {
 	defer p.Close()
 
 	if err != nil {
-		logrus.Fatal("Failed to create producer: %s\n", err)
+		logrus.Fatal("Failed to create producer: ", err , "\n")
 	}
 
 	fmt.Printf("Created Producer %v\n", p)
@@ -86,7 +86,7 @@ func processMessage(chanMessages <-chan interface{}, producer *kafka.Producer, t
 	deliveryChan := make(chan kafka.Event)
 	logrus.Info("Before processing the messages")
 	for msgBytes := range chanMessages {
-		logrus.Info("Message Bytes: ", msgBytes)
+		// logrus.Info("Message Bytes: ", msgBytes)
 		value, _ := json.Marshal(msgBytes)
 		err := producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
@@ -101,10 +101,10 @@ func processMessage(chanMessages <-chan interface{}, producer *kafka.Producer, t
 		m := e.(*kafka.Message)
 		if m.TopicPartition.Error != nil {
 			//fmt.Printf()
-			logrus.Fatal("Delivery failed: %v\n", m.TopicPartition.Error)
+			logrus.Fatal("Delivery failed: ",m.TopicPartition.Error, "\n" )
 		}
 		if err != nil {
-			logrus.Fatal("Producer failure: %v\n", err)
+			logrus.Fatal("Producer failure: ",err, "\n", )
 		}
 	}
 }
